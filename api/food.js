@@ -1,43 +1,31 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export const config = { runtime: 'edge' };
 
-  const { query } = req.body;
-  if (!query) return res.status(400).json({ error: 'No query provided' });
+export default async function handler(req) {
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) return new Response(JSON.stringify({ error: 'API key not configured' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  const { query } = await req.json();
+  if (!query) return new Response(JSON.stringify({ error: 'No query provided' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
-  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
-  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+  const prompt = `You are a nutrition database. Return ONLY a valid JSON array (no markdown, no explanation) of 6 food items matching "${query}". Each item must have exactly these fields: name (string), serving (string like "100g" or "1 cup"), calories (number), protein_g (number), carbs_g (number), fat_g (number), note (short string tip). Be accurate and realistic with nutrition values.`;
 
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    return new Response(JSON.stringify({ error: err.error?.message || 'Anthropic API error' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  const data = await response.json();
+  const text = data.content[0].text.replace(/```json|```/g, '').trim();
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: 'You are a precise nutrition database. Always respond with valid JSON only — no markdown, no explanation, no extra text.',
-        messages: [{
-          role: 'user',
-          content: `The user searched for: "${query}". Return a JSON array of exactly 6 foods or meals related to this search. Each object must have these exact keys: "name" (string), "serving" (string like "100g" or "1 cup"), "calories" (integer), "protein_g" (number with 1 decimal), "carbs_g" (number with 1 decimal), "fat_g" (number with 1 decimal), "note" (one helpful sentence about this food's nutrition). Return ONLY the JSON array, nothing else.`
-        }]
-      })
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error' });
-    }
-    const text = data.content.map(b => b.text || '').join('').trim().replace(/```json|```/g, '').trim();
-    const results = JSON.parse(text);
-    return res.status(200).json(results);
-  } catch (err) {
-    return res.status(500).json({ error: err.message || 'Internal server error' });
+    const parsed = JSON.parse(text);
+    return new Response(JSON.stringify(parsed), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch {
+    return new Response(JSON.stringify({ error: 'Failed to parse AI response' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
