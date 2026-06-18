@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const { query } = req.body;
   if (!query) return res.status(400).json({ error: 'No query provided' });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = (process.env.ANTHROPIC_API_KEY || '').trim();
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
@@ -31,11 +31,9 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error' });
     }
-
     const text = data.content.map(b => b.text || '').join('').trim().replace(/```json|```/g, '').trim();
     const results = JSON.parse(text);
     return res.status(200).json(results);
