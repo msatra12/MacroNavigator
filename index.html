@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacroNavigator — Know Your Macros. Own Your Goals.</title>
+<meta name="description" content="Free all-in-one health platform: calorie calculator, meal recipes, AI macro tracker, workout guide, BMI checker.">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--lime:#C8F53A;--lime-dim:#a8d020;--bg:#0D0D1A;--card:#181828;--card2:#20203A;--text:#F0EDE6;--muted:#7A7898;--border:#2A2A45;--blue:#5B8DEF;--orange:#F5A623;--green:#5BBF8D;--red:#F0605A}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;font-size:14px}
+nav{background:var(--card);border-bottom:1px solid var(--border);padding:0 1.2rem;display:flex;align-items:center;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:1.5rem;color:var(--lime);margin-right:1.5rem;letter-spacing:1px;padding:.9rem 0;white-space:nowrap}
+.nav-tabs{display:flex;flex-wrap:wrap}
+.tab-btn{background:none;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:.76rem;font-weight:500;padding:.9rem .75rem;cursor:pointer;position:relative;transition:color .2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--lime)}
+.tab-btn.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--lime)}
+.section{display:none;padding:1.6rem 1.4rem;max-width:960px;margin:0 auto}
+.section.active{display:block}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:1.7rem;font-weight:700;margin-bottom:.2rem}
+.sec-sub{color:var(--muted);font-size:.83rem;margin-bottom:1.3rem;line-height:1.5}
+.unit-toggle{display:flex;gap:0;margin-bottom:1.2rem;background:var(--card2);border-radius:8px;padding:3px;width:fit-content;border:1px solid var(--border)}
+.unit-btn{background:none;border:none;padding:.38rem 1.1rem;border-radius:6px;font-size:.78rem;font-weight:500;cursor:pointer;color:var(--muted);transition:all .18s;font-family:'Inter',sans-serif}
+.unit-btn.active{background:var(--card);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem}
+.fg{display:flex;flex-direction:column;gap:.3rem}
+.fg label{font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.fg input,.fg select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.55rem .8rem;border-radius:7px;font-family:'Inter',sans-serif;font-size:.85rem;outline:none;transition:border-color .2s;width:100%}
+.fg input:focus,.fg select:focus{border-color:var(--lime)}
+.fg select option{background:#181828}
+.full{grid-column:1/-1}
+.btn-lime{background:var(--lime);color:#0D0D1A;border:none;padding:.65rem 1.5rem;border-radius:7px;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:background .15s,transform .1s;width:100%;margin-top:.4rem}
+.btn-lime:hover{background:var(--lime-dim)}
+.btn-lime:active{transform:scale(.98)}
+.cal-results{display:none;margin-top:1.4rem}
+.cal-results.show{display:block}
+.res-lbl{font-size:.7rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:.7rem}
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.1rem}
+.sc{background:var(--card);border:1.5px solid var(--border);border-radius:11px;padding:.9rem 1rem;cursor:pointer;transition:all .2s;user-select:none}
+.sc:hover{border-color:rgba(200,245,58,.4)}
+.sc.active{border-color:var(--lime);background:rgba(200,245,58,.07)}
+.sc-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:.4rem}
+.sc.active .sc-lbl{color:var(--lime)}
+.sc-cal{font-size:1.45rem;font-weight:700;font-family:'Barlow Condensed',sans-serif;color:var(--text);line-height:1}
+.sc.active .sc-cal{color:var(--lime)}
+.sc-sub{font-size:.7rem;color:var(--muted);margin-top:.3rem}
+.sc.active .sc-sub{color:rgba(200,245,58,.7)}
+.macro-panel{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:1rem 1.1rem;margin-bottom:1.1rem}
+.mp-head{font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:.8rem}
+.mp-head span{color:var(--lime)}
+.macros-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
+.mc{background:var(--card2);border-radius:7px;padding:.7rem .9rem;text-align:center}
+.mc-num{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700}
+.mc.p .mc-num{color:var(--blue)}
+.mc.c .mc-num{color:var(--orange)}
+.mc.f .mc-num{color:var(--lime)}
+.mc-lbl{font-size:.67rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem}
+.tl-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem}
+.tl-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.7rem .9rem;text-align:center}
+.tl-num{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--lime)}
+.tl-lbl{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:.15rem}
+.cal-note{font-size:.72rem;color:var(--muted);margin-top:.9rem;line-height:1.6}
+
+/* Diet tabs */
+.diet-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.dtab{background:var(--card);border:1.5px solid var(--border);color:var(--muted);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:600;transition:all .18s}
+.dtab:hover{border-color:var(--lime);color:var(--text)}
+.dtab.active{background:rgba(200,245,58,.12);border-color:var(--lime);color:var(--lime)}
+.goal-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.gtab{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:.35rem .85rem;border-radius:20px;cursor:pointer;font-size:.74rem;font-weight:500;transition:all .18s}
+.gtab:hover,.gtab.active{background:rgba(200,245,58,.1);border-color:var(--lime);color:var(--lime)}
+
+/* Meal cards */
+.meals-grid{display:grid;gap:.6rem}
+.meal-card{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden;transition:border-color .2s}
+.meal-card:hover{border-color:rgba(200,245,58,.3)}
+.meal-hdr{display:flex;align-items:center;gap:.9rem;padding:.9rem 1.1rem;cursor:pointer;user-select:none}
+.meal-emoji{font-size:1.6rem;min-width:32px}
+.meal-info{flex:1;min-width:0}
+.meal-name{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700}
+.meal-meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.15rem}
+.meal-origin{font-size:.67rem;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+.mbadge{display:inline-block;font-size:.65rem;font-weight:700;padding:.18rem .5rem;border-radius:4px;text-transform:uppercase}
+.bl{background:rgba(91,141,239,.15);color:var(--blue)}
+.bg{background:rgba(200,245,58,.12);color:var(--lime)}
+.bm{background:rgba(245,166,35,.12);color:var(--orange)}
+.meal-cals{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--lime);white-space:nowrap}
+.meal-arr{color:var(--muted);font-size:.8rem;transition:transform .22s;margin-left:.5rem}
+.meal-card.open .meal-arr{transform:rotate(180deg)}
+.meal-body{display:none;padding:0 1.1rem 1.1rem;border-top:1px solid var(--border)}
+.meal-card.open .meal-body{display:block}
+.rec-macs{display:flex;gap:.7rem;margin:.75rem 0;flex-wrap:wrap}
+.rmac{background:var(--card2);border-radius:5px;padding:.35rem .7rem;font-size:.75rem;color:var(--muted)}
+.rmac span{color:var(--text);font-weight:600}
+.diet-tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
+.dtag{font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:4px;text-transform:uppercase}
+.dtag-halal{background:rgba(91,191,141,.15);color:#5BBF8D}
+.dtag-vegan{background:rgba(200,245,58,.12);color:var(--lime)}
+.dtag-veg{background:rgba(91,141,239,.15);color:var(--blue)}
+.dtag-gf{background:rgba(245,166,35,.12);color:var(--orange)}
+.dtag-nonhalal{background:rgba(240,96,90,.12);color:var(--red)}
+.rsec{margin-top:.75rem}
+.rsec h4{font-family:'Barlow Condensed',sans-serif;font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--lime);margin-bottom:.45rem}
+.ing-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:.2rem}
+.ing-list li{font-size:.78rem;color:var(--muted);padding:.18rem 0 .18rem .75rem;position:relative;line-height:1.4}
+.ing-list li::before{content:'·';position:absolute;left:0;color:var(--lime)}
+.steps-list{list-style:none;counter-reset:st}
+.steps-list li{font-size:.78rem;color:var(--muted);padding:.28rem 0 .28rem 1.5rem;position:relative;line-height:1.5;counter-increment:st}
+.steps-list li::before{content:counter(st);position:absolute;left:0;color:var(--lime);font-weight:700}
+
+/* Food tracker */
+.srch-wrap{margin-bottom:.8rem}
+.srch-wrap input{width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);padding:.6rem .9rem;border-radius:7px;font-family:'Inter',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s}
+.srch-wrap input:focus{border-color:var(--lime)}
+.ai-status{font-size:.75rem;margin-bottom:.7rem;min-height:16px;color:var(--muted)}
+.ai-status.loading{color:var(--lime)}
+.ai-status.err{color:var(--red)}
+.food-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:.6rem;margin-bottom:1rem}
+.food-item{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:.7rem .9rem;cursor:pointer;transition:all .18s}
+.food-item:hover{border-color:var(--lime);background:rgba(200,245,58,.05)}
+.food-item.sel{border-color:var(--lime);background:rgba(200,245,58,.1)}
+.food-name{font-weight:600;font-size:.84rem;margin-bottom:.12rem;line-height:1.3}
+.food-cal{font-size:.7rem;color:var(--muted)}
+.log-res{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:1.3rem;display:none;margin-top:.5rem}
+.log-res.show{display:block}
+
+/* Workouts */
+.gender-select-wrap{display:flex;gap:.7rem;margin-bottom:1.5rem;align-items:center}
+.gender-select-wrap label{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.gender-select{background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:.5rem 1.2rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:.88rem;outline:none;cursor:pointer;transition:border-color .2s}
+.gender-select:focus{border-color:var(--lime)}
+.gender-select option{background:#181828}
+.muscle-accordion{display:grid;gap:.6rem}
+.muscle-item{background:var(--card);border:1px solid var(--border);border-radius:11px;overflow:hidden}
+.muscle-hdr{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.1rem;cursor:pointer;user-select:none;transition:background .18s}
+.muscle-hdr:hover{background:rgba(200,245,58,.04)}
+.muscle-icon{font-size:1.4rem;min-width:28px}
+.muscle-hdr-info{flex:1}
+.muscle-hdr-name{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700}
+.muscle-hdr-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.muscle-arr{color:var(--muted);font-size:.8rem;transition:transform .22s}
+.muscle-item.open .muscle-arr{transform:rotate(180deg)}
+.muscle-body{display:none;padding:0 1.1rem 1.1rem;border-top:1px solid var(--border)}
+.muscle-item.open .muscle-body{display:block}
+.sub-grp{margin-top:.9rem}
+.sg-label{font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--lime);margin-bottom:.45rem}
+.ex-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem}
+.ex-card{background:var(--card2);border:1px solid var(--border);border-radius:7px;padding:.65rem .9rem}
+.ex-name{font-weight:600;font-size:.83rem;margin-bottom:.15rem;line-height:1.3}
+.ex-detail{font-size:.7rem;color:var(--muted)}
+.ex-tag{display:inline-block;font-size:.62rem;font-weight:700;padding:.13rem .42rem;border-radius:3px;background:rgba(200,245,58,.1);color:var(--lime);text-transform:uppercase;letter-spacing:.3px;margin-top:.25rem}
+
+/* BMI */
+.bmi-result{display:none;background:var(--card2);border-radius:8px;padding:1rem 1.2rem;margin-top:1rem;text-align:center}
+.bmi-result.show{display:block}
+.bmi-num{font-family:'Barlow Condensed',sans-serif;font-size:2.8rem;font-weight:900}
+.bmi-bar-wrap{height:10px;border-radius:5px;background:linear-gradient(to right,var(--blue) 0%,var(--green) 25%,var(--lime) 45%,var(--orange) 65%,var(--red) 100%);margin:1rem 0 .4rem;position:relative}
+.bmi-marker{position:absolute;top:-3px;width:4px;height:16px;background:white;border-radius:2px;transform:translateX(-50%);transition:left .5s}
+.tip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.8rem}
+.tip-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:1.1rem 1.2rem}
+.tip-icon{font-size:1.4rem;margin-bottom:.5rem}
+.tip-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.35rem}
+.tip-body{font-size:.78rem;color:var(--muted);line-height:1.55}
+.hero-about{background:var(--card);border-bottom:1px solid var(--border);padding:2.5rem 1.5rem;text-align:center;position:relative;overflow:hidden}
+.hero-about::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;border-radius:50%;border:1px solid rgba(200,245,58,.06);animation:pulse 3.5s ease-in-out infinite}
+.hero-about::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:230px;height:230px;border-radius:50%;border:1px solid rgba(200,245,58,.1);animation:pulse 3.5s ease-in-out infinite .6s}
+@keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.5}50%{transform:translate(-50%,-50%) scale(1.07);opacity:1}}
+.hero-tag{display:inline-block;background:rgba(200,245,58,.12);color:var(--lime);font-size:.68rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:.3rem .85rem;border-radius:20px;margin-bottom:.9rem;position:relative;z-index:1}
+.hero-about h1{font-family:'Barlow Condensed',sans-serif;font-size:3rem;font-weight:900;line-height:.92;letter-spacing:-1px;position:relative;z-index:1}
+.hero-about h1 span{color:var(--lime)}
+.hero-about p{color:var(--muted);font-size:.92rem;margin-top:.75rem;max-width:500px;margin-left:auto;margin-right:auto;position:relative;z-index:1;line-height:1.6}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem;margin-top:1.2rem}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:1.1rem;transition:border-color .2s;cursor:pointer}
+.feat-card:hover{border-color:rgba(200,245,58,.3)}
+.feat-icon{font-size:1.5rem;margin-bottom:.5rem}
+.feat-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.3rem}
+.feat-desc{font-size:.76rem;color:var(--muted);line-height:1.5}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:1.2rem}
+.stat-card{background:var(--card2);border-radius:8px;padding:1rem;text-align:center}
+.stat-num{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--lime)}
+.stat-lbl{font-size:.73rem;color:var(--muted);margin-top:.2rem}
+.divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+</style>
+</head>
+<body>
+<nav>
+  <span class="logo">MACRONAVIGATOR</span>
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('about',this)">About</button>
+    <button class="tab-btn" onclick="showTab('calories',this)">Calorie Calculator</button>
+    <button class="tab-btn" onclick="showTab('meals',this)">Meal Ideas</button>
+    <button class="tab-btn" onclick="showTab('tracker',this)">Food Tracker</button>
+    <button class="tab-btn" onclick="showTab('workouts',this)">Workouts</button>
+    <button class="tab-btn" onclick="showTab('bmi',this)">BMI & Health</button>
+    <button class="tab-btn" onclick="showTab('tips',this)">Nutrition Tips</button>
+  </div>
+</nav>
+
+<!-- ABOUT -->
+<div id="about" class="section active">
+  <div class="hero-about">
+    <div class="hero-tag">Your Health. Navigated.</div>
+    <h1>KNOW YOUR<br><span>MACROS.</span><br>OWN YOUR<br><span>GOALS.</span></h1>
+    <p>MacroNavigator is a free all-in-one health platform built to help you understand your nutrition, plan your meals, and train smarter — for every diet, every goal, every body.</p>
+  </div>
+  <div style="padding-top:1.4rem">
+    <div class="sec-title">What is MacroNavigator?</div>
+    <div class="sec-sub">MacroNavigator takes the guesswork out of health and fitness. Science-backed calorie calculations, real meal recipes for every diet type, AI-powered food lookup, and gender-specific workout plans — all free.</div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num">7</div><div class="stat-lbl">Tools in one platform</div></div>
+      <div class="stat-card"><div class="stat-num">5</div><div class="stat-lbl">Diet categories</div></div>
+      <div class="stat-card"><div class="stat-num">AI</div><div class="stat-lbl">Powered food tracker</div></div>
+    </div>
+    <div class="feat-grid" style="margin-top:1.2rem">
+      <div class="feat-card" onclick="showTabByName('calories')"><div class="feat-icon">🔢</div><div class="feat-title">Calorie Calculator</div><div class="feat-desc">Metric or imperial. Three calorie targets — maintain, lose steady, lose fast — with full macro breakdowns.</div></div>
+      <div class="feat-card" onclick="showTabByName('meals')"><div class="feat-icon">🍽️</div><div class="feat-title">Meal Ideas</div><div class="feat-desc">Halal, non-halal, gluten-free, vegetarian, and vegan meals — each with full recipes and macros.</div></div>
+      <div class="feat-card" onclick="showTabByName('tracker')"><div class="feat-icon">🤖</div><div class="feat-title">AI Food Tracker</div><div class="feat-desc">Type any food and get instant macro breakdowns powered by AI.</div></div>
+      <div class="feat-card" onclick="showTabByName('workouts')"><div class="feat-icon">💪</div><div class="feat-title">Workout Guide</div><div class="feat-desc">Gender-specific workouts for every muscle group — broken down by region with sets and reps.</div></div>
+      <div class="feat-card" onclick="showTabByName('bmi')"><div class="feat-icon">📊</div><div class="feat-title">BMI & Health Check</div><div class="feat-desc">Calculate your BMI with a visual range indicator and health guidance.</div></div>
+      <div class="feat-card" onclick="showTabByName('tips')"><div class="feat-icon">💡</div><div class="feat-title">Nutrition Tips</div><div class="feat-desc">12 evidence-based habits covering protein, hydration, sleep, and more.</div></div>
+    </div>
+    <div style="background:rgba(200,245,58,.07);border:1px solid rgba(200,245,58,.2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.3rem">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;color:var(--lime);margin-bottom:.3rem">⚠️ Disclaimer</div>
+      <div style="font-size:.76rem;color:var(--muted);line-height:1.6">MacroNavigator provides general health and nutrition information for educational purposes only. Always consult a qualified healthcare provider before making significant changes to your diet or exercise routine.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CALORIES -->
+<div id="calories" class="section">
+  <div class="sec-title">Calorie Calculator</div>
+  <div class="sec-sub">Enter your details — tap any target to see its macro breakdown. Supports metric and imperial.</div>
+  <div class="unit-toggle">
+    <button class="unit-btn active" onclick="setUnit('metric',this)">Metric (kg / cm)</button>
+    <button class="unit-btn" onclick="setUnit('imperial',this)">Imperial (lbs / ft)</button>
+  </div>
+  <div class="form-grid">
+    <div class="fg"><label>Age</label><input type="number" id="age" placeholder="e.g. 28" min="10" max="100"></div>
+    <div class="fg"><label>Sex</label><select id="sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+    <div class="fg"><label id="wlbl">Current weight (kg)</label><input type="number" id="weight" placeholder="e.g. 80"></div>
+    <div class="fg"><label id="gwlbl">Goal weight (kg, optional)</label><input type="number" id="gweight" placeholder="e.g. 72"></div>
+    <div class="fg"><label id="hlbl">Height (cm)</label><input type="number" id="height" placeholder="e.g. 175"></div>
+    <div class="fg" id="hin-wrap" style="display:none"><label>Extra inches</label><input type="number" id="height-in" placeholder="e.g. 3 (for 5ft 3in)" min="0" max="11"></div>
+    <div class="fg"><label>Goal date</label><input type="date" id="goal-date"></div>
+    <div class="fg full"><label>Activity level</label>
+      <select id="activity">
+        <option value="1.2">Sedentary — desk job, little movement</option>
+        <option value="1.375">Lightly active — 1–3 workouts/week</option>
+        <option value="1.55" selected>Moderately active — 3–5 workouts/week</option>
+        <option value="1.725">Very active — 6–7 workouts/week</option>
+        <option value="1.9">Extra active — physical job + daily training</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn-lime" onclick="calcCalories()">CALCULATE MY PLAN</button>
+  <div class="cal-results" id="cal-results">
+    <div class="res-lbl" style="margin-top:1.4rem">Tap a target to see its macros</div>
+    <div class="scenarios">
+      <div class="sc" id="sc-fast" onclick="selectScene('fast')">
+        <div class="sc-lbl">Lose weight fast</div>
+        <div class="sc-cal" id="sc-fast-num">—</div>
+        <div class="sc-sub" id="sc-fast-sub">−750 kcal · ~0.75kg/wk</div>
+      </div>
+      <div class="sc active" id="sc-maintain" onclick="selectScene('maintain')">
+        <div class="sc-lbl">Maintain weight</div>
+        <div class="sc-cal" id="sc-maintain-num">—</div>
+        <div class="sc-sub">Your TDEE baseline</div>
+      </div>
+      <div class="sc" id="sc-slow" onclick="selectScene('slow')">
+        <div class="sc-lbl">Lose weight steadily</div>
+        <div class="sc-cal" id="sc-slow-num">—</div>
+        <div class="sc-sub" id="sc-slow-sub">−500 kcal · ~0.5kg/wk</div>
+      </div>
+    </div>
+    <div class="macro-panel">
+      <div class="mp-head">Macros for <span id="mp-label">Maintain weight</span></div>
+      <div class="macros-grid">
+        <div class="mc p"><div class="mc-num" id="prot">—</div><div class="mc-lbl">Protein</div></div>
+        <div class="mc c"><div class="mc-num" id="carb">—</div><div class="mc-lbl">Carbs</div></div>
+        <div class="mc f"><div class="mc-num" id="fat">—</div><div class="mc-lbl">Fats</div></div>
+      </div>
+    </div>
+    <div id="tl-wrap">
+      <div class="res-lbl">Goal timeline</div>
+      <div class="tl-row">
+        <div class="tl-card"><div class="tl-num" id="tl-weeks">—</div><div class="tl-lbl">Weeks</div></div>
+        <div class="tl-card"><div class="tl-num" id="tl-target">—</div><div class="tl-lbl">Recommended</div></div>
+        <div class="tl-card"><div class="tl-num" id="tl-change">—</div><div class="tl-lbl">Est. change</div></div>
+        <div class="tl-card"><div class="tl-num" id="tl-rate">—</div><div class="tl-lbl"><span id="rate-unit">kg</span>/week</div></div>
+      </div>
+    </div>
+    <div class="cal-note">Based on the Mifflin–St Jeor equation. Minimum 1,200 kcal/day enforced. Adjust week to week based on how your body responds.</div>
+  </div>
+</div>
+
+<!-- MEALS -->
+<div id="meals" class="section">
+  <div class="sec-title">Meal Ideas</div>
+  <div class="sec-sub">Filter by diet type and goal. Tap any meal to reveal the full recipe.</div>
+  <div class="diet-tabs">
+    <button class="dtab active" onclick="setDiet('halal',this)">🟢 Halal</button>
+    <button class="dtab" onclick="setDiet('nonhalal',this)">🥩 Non-Halal</button>
+    <button class="dtab" onclick="setDiet('glutenfree',this)">🌾 Gluten-Free</button>
+    <button class="dtab" onclick="setDiet('vegetarian',this)">🥦 Vegetarian</button>
+    <button class="dtab" onclick="setDiet('vegan',this)">🌱 Vegan</button>
+  </div>
+  <div class="goal-tabs">
+    <button class="gtab active" onclick="setGoalFilter('all',this)">All Goals</button>
+    <button class="gtab" onclick="setGoalFilter('lose',this)">Weight Loss</button>
+    <button class="gtab" onclick="setGoalFilter('bulk',this)">Bulking</button>
+    <button class="gtab" onclick="setGoalFilter('maintain',this)">Maintenance</button>
+  </div>
+  <div class="meals-grid" id="meals-grid"></div>
+</div>
+
+<!-- TRACKER -->
+<div id="tracker" class="section">
+  <div class="sec-title">AI Food Tracker</div>
+  <div class="sec-sub">Type any food, dish, or meal. Our AI finds it and breaks down the macros instantly.</div>
+  <div class="srch-wrap"><input type="text" id="food-search" placeholder="e.g. 'jollof rice', 'avocado toast', 'protein shake'..." oninput="handleFoodInput()"></div>
+  <div class="ai-status" id="ai-status"></div>
+  <div class="food-grid" id="food-results"></div>
+  <div class="log-res" id="log-result">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:.9rem;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700" id="log-name"></div>
+        <div style="font-size:.74rem;color:var(--muted)" id="log-serving"></div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.9rem;font-weight:900;color:var(--lime)" id="log-cal"></div>
+    </div>
+    <div class="macros-grid">
+      <div class="mc p"><div class="mc-num" id="log-prot"></div><div class="mc-lbl">Protein</div></div>
+      <div class="mc c"><div class="mc-num" id="log-carb"></div><div class="mc-lbl">Carbs</div></div>
+      <div class="mc f"><div class="mc-num" id="log-fat"></div><div class="mc-lbl">Fats</div></div>
+    </div>
+    <div id="log-notes" style="font-size:.77rem;color:var(--muted);margin-top:.85rem;line-height:1.6"></div>
+  </div>
+</div>
+
+<!-- WORKOUTS -->
+<div id="workouts" class="section">
+  <div class="sec-title">Workout Guide</div>
+  <div class="sec-sub">Select your gender for tailored exercises. Click any muscle group to expand.</div>
+  <div class="gender-select-wrap">
+    <label>Training for:</label>
+    <select class="gender-select" id="gender-select" onchange="renderWorkouts()">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+  </div>
+  <div class="muscle-accordion" id="workout-content"></div>
+</div>
+
+<!-- BMI -->
+<div id="bmi" class="section">
+  <div class="sec-title">BMI & Health Check</div>
+  <div class="sec-sub">A quick snapshot of whether your weight is in a healthy range for your height.</div>
+  <div class="form-grid">
+    <div class="fg"><label>Weight (kg)</label><input type="number" id="bmi-w" placeholder="e.g. 75"></div>
+    <div class="fg"><label>Height (cm)</label><input type="number" id="bmi-h" placeholder="e.g. 175"></div>
+  </div>
+  <button class="btn-lime" onclick="calcBMI()">CALCULATE BMI</button>
+  <div class="bmi-result" id="bmi-result">
+    <div class="bmi-num" id="bmi-val">0</div>
+    <div style="font-size:.85rem;font-weight:600;margin-top:.2rem" id="bmi-cat"></div>
+    <div class="bmi-bar-wrap"><div class="bmi-marker" id="bmi-marker"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted)"><span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span></div>
+    <div id="bmi-note" style="font-size:.76rem;color:var(--muted);margin-top:.9rem;line-height:1.6;text-align:left"></div>
+  </div>
+  <div style="margin-top:1.5rem;display:grid;gap:.6rem">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;align-items:center;gap:.9rem"><span style="font-size:1.2rem">🔵</span><div><div style="font-weight:600;font-size:.85rem">Below 18.5 — Underweight</div><div style="font-size:.75rem;color:var(--muted)">Focus on calorie-dense whole foods and resistance training.</div></div></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;align-items:center;gap:.9rem"><span style="font-size:1.2rem">🟢</span><div><div style="font-weight:600;font-size:.85rem">18.5 – 24.9 — Normal weight</div><div style="font-size:.75rem;color:var(--muted)">Lowest health risk. Maintain through balanced diet and exercise.</div></div></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;align-items:center;gap:.9rem"><span style="font-size:1.2rem">🟡</span><div><div style="font-weight:600;font-size:.85rem">25 – 29.9 — Overweight</div><div style="font-size:.75rem;color:var(--muted)">A moderate calorie deficit and more movement can help.</div></div></div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.8rem 1rem;display:flex;align-items:center;gap:.9rem"><span style="font-size:1.2rem">🔴</span><div><div style="font-weight:600;font-size:.85rem">30+ — Obese</div><div style="font-size:.75rem;color:var(--muted)">Consult a healthcare professional for a personalised plan.</div></div></div>
+  </div>
+</div>
+
+<!-- TIPS -->
+<div id="tips" class="section">
+  <div class="sec-title">Nutrition Tips</div>
+  <div class="sec-sub">Evidence-based habits that actually move the needle.</div>
+  <div class="tip-grid" id="tips-grid"></div>
+</div>
+
+<script>
+// ── Navigation ──────────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function showTabByName(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active')});
+}
+
+// ── Calorie Calculator ──────────────────────────────────────────
+let unit='metric', weightKg=0, fastCal=0, maintainCal=0, slowCal=0;
+const today=new Date();
+document.getElementById('goal-date').min=today.toISOString().split('T')[0];
+const def=new Date(today); def.setMonth(def.getMonth()+3);
+document.getElementById('goal-date').value=def.toISOString().split('T')[0];
+
+function setUnit(u,btn){
+  unit=u;
+  document.querySelectorAll('.unit-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const imp=u==='imperial';
+  document.getElementById('wlbl').textContent='Current weight ('+(imp?'lbs':'kg')+')';
+  document.getElementById('gwlbl').textContent='Goal weight ('+(imp?'lbs':'kg')+', optional)';
+  document.getElementById('hlbl').textContent='Height ('+(imp?'feet':'cm')+')';
+  document.getElementById('hin-wrap').style.display=imp?'flex':'none';
+  document.getElementById('weight').placeholder=imp?'e.g. 176':'e.g. 80';
+  document.getElementById('gweight').placeholder=imp?'e.g. 158':'e.g. 72';
+  document.getElementById('height').placeholder=imp?'e.g. 5':'e.g. 175';
+  const wu=imp?'lbs':'kg';
+  document.getElementById('sc-fast-sub').textContent='−750 kcal · ~0.75'+wu+'/wk';
+  document.getElementById('sc-slow-sub').textContent='−500 kcal · ~0.5'+wu+'/wk';
+  document.getElementById('rate-unit').textContent=wu;
+}
+function toKg(v){return unit==='imperial'?v/2.2046:v}
+function toCm(ft,inch){return unit==='imperial'?(ft*30.48)+(inch*2.54):ft}
+function fromKg(kg){return unit==='imperial'?+(kg*2.2046).toFixed(1):+(kg).toFixed(1)}
+function getMacros(cal,wkg){
+  const prot=Math.round(wkg*2.2);
+  const fat=Math.round((cal*.25)/9);
+  const carb=Math.max(0,Math.round((cal-(prot*4)-(fat*9))/4));
+  return{prot,fat,carb};
+}
+function calcCalories(){
+  const age=+document.getElementById('age').value;
+  const sex=document.getElementById('sex').value;
+  const wRaw=+document.getElementById('weight').value;
+  const gwRaw=+document.getElementById('gweight').value;
+  const hRaw=+document.getElementById('height').value;
+  const hIn=+(document.getElementById('height-in').value||0);
+  const act=+document.getElementById('activity').value;
+  const gdStr=document.getElementById('goal-date').value;
+  if(!age||!wRaw||!hRaw){alert('Please fill in Age, Weight, and Height.');return}
+  weightKg=toKg(wRaw);
+  const gwKg=gwRaw?toKg(gwRaw):0;
+  const hCm=toCm(hRaw,hIn);
+  let bmr=sex==='male'?(10*weightKg)+(6.25*hCm)-(5*age)+5:(10*weightKg)+(6.25*hCm)-(5*age)-161;
+  let tdee=Math.round(bmr*act);
+  fastCal=Math.max(1200,tdee-750);
+  maintainCal=tdee;
+  slowCal=Math.max(1200,tdee-500);
+  document.getElementById('sc-fast-num').textContent=fastCal+' kcal';
+  document.getElementById('sc-maintain-num').textContent=maintainCal+' kcal';
+  document.getElementById('sc-slow-num').textContent=slowCal+' kcal';
+  const tlWrap=document.getElementById('tl-wrap');
+  if(gdStr){
+    const gd=new Date(gdStr);
+    const days=Math.round((gd-today)/86400000);
+    if(days>=7){
+      const weeks=Math.round(days/7);
+      let targetCal=slowCal,changeKg=weeks*0.5,rateKg=0.5;
+      if(gwKg&&gwKg<weightKg){const kg=weightKg-gwKg;const deficit=Math.round((kg*7700)/days);targetCal=Math.max(1200,tdee-deficit);changeKg=kg;rateKg=+(kg/(days/7)).toFixed(2);}
+      document.getElementById('tl-weeks').textContent=weeks;
+      document.getElementById('tl-target').textContent=targetCal+' kcal';
+      document.getElementById('tl-change').textContent='-'+fromKg(changeKg)+(unit==='imperial'?'lbs':'kg');
+      document.getElementById('tl-rate').textContent=fromKg(rateKg);
+      tlWrap.style.display='block';
+    }else{tlWrap.style.display='none';}
+  }else{tlWrap.style.display='none';}
+  document.getElementById('cal-results').classList.add('show');
+  selectScene('maintain');
+}
+function selectScene(scene){
+  document.querySelectorAll('.sc').forEach(el=>el.classList.remove('active'));
+  document.getElementById('sc-'+scene).classList.add('active');
+  const calMap={fast:fastCal,maintain:maintainCal,slow:slowCal};
+  const lblMap={fast:'Lose fast',maintain:'Maintain weight',slow:'Lose steadily'};
+  const cal=calMap[scene];
+  const{prot,fat,carb}=getMacros(cal,weightKg);
+  document.getElementById('mp-label').textContent=lblMap[scene]+' ('+cal+' kcal)';
+  document.getElementById('prot').textContent=prot+'g';
+  document.getElementById('carb').textContent=carb+'g';
+  document.getElementById('fat').textContent=fat+'g';
+}
+
+// ── Meals ───────────────────────────────────────────────────────
+const MEALS=[
+  // HALAL
+  {name:"Moroccan Chicken Tagine",origin:"Moroccan",diets:["halal","glutenfree"],goal:"maintain",emoji:"🫕",cal:420,p:38,c:30,f:14,ing:["400g halal chicken thighs","1 can chickpeas","1 can crushed tomatoes","1 onion","2 garlic cloves","1 tsp cinnamon, cumin, turmeric","1 tbsp olive oil","Green olives","Fresh coriander"],steps:["Brown chicken in olive oil 3–4 min each side.","Sauté onion and garlic 5 min. Add spices and stir 1 min.","Add tomatoes, chickpeas, olives. Return chicken. Simmer covered 35–40 min.","Garnish with coriander. Serve with couscous."]},
+  {name:"Jollof Rice & Grilled Chicken",origin:"West African",diets:["halal","glutenfree"],goal:"bulk",emoji:"🍛",cal:550,p:34,c:62,f:13,ing:["300g long grain rice","400g halal chicken","1 can tomatoes","2 red peppers","1 onion","Chicken stock cube","Bay leaves, thyme","2 tbsp oil"],steps:["Blend tomatoes, peppers, onion. Cook down in oil 20 min.","Add rinsed rice and stock. Cook covered 30 min.","Grill chicken at 200°C for 30 min.","Serve rice topped with chicken."]},
+  {name:"Chicken Shawarma Bowl",origin:"Middle Eastern",diets:["halal"],goal:"bulk",emoji:"🌮",cal:510,p:44,c:36,f:18,ing:["250g halal chicken thighs","1 tsp cumin, turmeric, paprika, cinnamon","1 tbsp olive oil","Lemon juice","2 garlic cloves","Rice or flatbread","Cucumber & tomato","Tahini sauce","Parsley"],steps:["Marinate chicken with spices, oil, lemon, garlic 30 min.","Grill or bake at 220°C for 20–25 min. Rest 5 min.","Build bowl: rice, chicken, cucumber, tomato.","Drizzle with tahini and scatter parsley."]},
+  {name:"Lamb Kofta with Quinoa",origin:"Middle Eastern",diets:["halal","glutenfree"],goal:"bulk",emoji:"🍢",cal:490,p:42,c:30,f:18,ing:["350g halal ground lamb","1 tsp cumin, coriander, cinnamon","2 garlic cloves","1 onion, grated","80g quinoa","Cherry tomatoes","Fresh mint","Greek yogurt (optional)"],steps:["Mix lamb with spices, garlic, onion. Shape into kofta logs.","Grill or pan-fry kofta 8–10 min turning often.","Cook quinoa in 160ml water 15 min.","Serve kofta over quinoa with tomatoes, mint."]},
+  {name:"Shakshuka",origin:"Middle Eastern",diets:["halal","vegetarian","glutenfree"],goal:"lose",emoji:"🍳",cal:250,p:17,c:18,f:11,ing:["4 eggs","1 can crushed tomatoes","1 red pepper","1 onion","3 garlic cloves","1 tsp cumin, paprika","Olive oil","Fresh parsley","Feta (optional)"],steps:["Sauté onion, pepper in oil 5 min. Add garlic and spices.","Pour in tomatoes. Simmer 10 min until thick.","Make 4 wells. Crack eggs in. Cover 5–7 min.","Top with parsley and feta."]},
+  {name:"Halal Beef Stir-Fry",origin:"Asian",diets:["halal","glutenfree"],goal:"bulk",emoji:"🥩",cal:480,p:40,c:28,f:18,ing:["300g halal beef strips","250g broccoli","3 garlic cloves","1 tbsp ginger","3 tbsp soy sauce (GF)","1 tbsp oyster sauce","Sesame oil","Cooked rice"],steps:["Marinate beef in soy sauce and cornstarch 15 min.","Stir-fry beef in hot wok 2–3 min. Remove.","Stir-fry garlic, ginger, broccoli 3–4 min.","Return beef, add sauces. Toss and serve over rice."]},
+  {name:"Turkish Lentil Soup",origin:"Turkish",diets:["halal","vegan","glutenfree"],goal:"lose",emoji:"🍜",cal:260,p:16,c:40,f:4,ing:["200g red lentils","2 carrots","2 celery stalks","1 onion","3 garlic cloves","1 tsp cumin, turmeric, paprika","1.2L vegetable stock","Lemon juice","Parsley"],steps:["Sauté onion, carrot, celery 8 min. Add garlic and spices.","Add lentils and stock. Simmer 25 min.","Blend half the soup for creamy texture.","Add lemon juice and serve with parsley."]},
+
+  // NON-HALAL
+  {name:"Bacon & Egg Protein Bowl",origin:"Classic",diets:["nonhalal","glutenfree"],goal:"bulk",emoji:"🥓",cal:520,p:42,c:18,f:30,ing:["4 rashers bacon","3 whole eggs","1 avocado","80g baby spinach","Cherry tomatoes","1 tbsp olive oil","Salt & pepper"],steps:["Pan-fry bacon until crispy. Set aside.","Fry eggs in same pan to your liking.","Arrange spinach, tomatoes, avocado in bowl.","Top with eggs and bacon. Drizzle with olive oil."]},
+  {name:"Pulled Pork Rice Bowl",origin:"American",diets:["nonhalal","glutenfree"],goal:"bulk",emoji:"🍖",cal:580,p:46,c:52,f:15,ing:["400g pork shoulder","2 tbsp BBQ sauce (GF)","1 tsp smoked paprika","1 tsp cumin","Brown rice","Coleslaw","Corn","Spring onions"],steps:["Season pork with paprika and cumin. Slow cook 6–8 hrs or pressure cook 1.5 hrs.","Shred pork and toss with BBQ sauce.","Cook brown rice. Assemble bowl with rice, pork, coleslaw, corn.","Top with spring onions."]},
+  {name:"Pork & Vegetable Stir-Fry",origin:"Asian",diets:["nonhalal"],goal:"maintain",emoji:"🥡",cal:420,p:35,c:30,f:14,ing:["300g pork tenderloin, sliced","Mixed peppers","Broccoli","Snap peas","3 garlic cloves","Soy sauce","Oyster sauce","Sesame oil","Cooked rice"],steps:["Stir-fry pork in hot wok 3–4 min. Remove.","Stir-fry vegetables with garlic 3–4 min.","Return pork, add sauces and sesame oil.","Toss together and serve over rice."]},
+  {name:"Salmon Bacon Frittata",origin:"Classic",diets:["nonhalal","glutenfree"],goal:"lose",emoji:"🍳",cal:310,p:32,c:6,f:18,ing:["6 eggs","100g smoked salmon","2 bacon rashers","Handful baby spinach","30g cream cheese","Salt, pepper, dill","1 tsp olive oil"],steps:["Preheat oven to 180°C. Cook bacon in oven-safe pan. Remove.","Sauté spinach in pan until wilted.","Whisk eggs with cream cheese, season. Pour into pan.","Add salmon, bacon on top. Bake 15–18 min until set."]},
+
+  // GLUTEN-FREE
+  {name:"Salmon & Sweet Potato",origin:"Classic",diets:["glutenfree","halal"],goal:"bulk",emoji:"🐟",cal:540,p:42,c:44,f:16,ing:["200g salmon fillet","1 large sweet potato","1 tbsp olive oil","1 tsp smoked paprika","Lemon juice","Fresh dill","Steamed broccoli"],steps:["Roast cubed sweet potato at 200°C with oil and paprika 25–30 min.","Season salmon with lemon, oil, salt. Bake 12–15 min.","Steam broccoli until tender.","Serve salmon over sweet potato with broccoli and dill."]},
+  {name:"Beef & Vegetable Bowl",origin:"Classic",diets:["glutenfree","halal"],goal:"lose",emoji:"🥗",cal:380,p:36,c:22,f:14,ing:["250g lean beef mince","1 zucchini, diced","1 red pepper","1 onion","2 garlic cloves","1 tsp cumin, paprika","1 can diced tomatoes","Fresh coriander"],steps:["Brown beef mince in a pan. Drain excess fat.","Add onion, garlic, cook 3 min. Add spices.","Add veg and tomatoes. Simmer 15 min.","Serve in bowls topped with coriander."]},
+  {name:"Egg & Avocado Breakfast Bowl",origin:"Classic",diets:["glutenfree","vegetarian","halal"],goal:"maintain",emoji:"🥑",cal:350,p:18,c:14,f:26,ing:["3 eggs","1 avocado","Cherry tomatoes","Baby spinach","1 tbsp olive oil","Lemon juice","Salt, pepper, chili flakes"],steps:["Fry or poach eggs to your liking.","Slice avocado and season with lemon, salt.","Arrange spinach, tomatoes in bowl.","Top with eggs and avocado. Drizzle oil and chili flakes."]},
+  {name:"Greek Chicken Salad",origin:"Mediterranean",diets:["glutenfree","halal"],goal:"lose",emoji:"🥙",cal:340,p:36,c:12,f:16,ing:["200g grilled chicken breast","Romaine lettuce","Cherry tomatoes","Cucumber","Red onion","Kalamata olives","Feta cheese","Olive oil & lemon dressing"],steps:["Grill or pan-fry seasoned chicken 6–7 min per side. Slice.","Chop all vegetables and combine in a bowl.","Add olives and crumbled feta.","Top with chicken and drizzle with olive oil and lemon."]},
+
+  // VEGETARIAN
+  {name:"Paneer Tikka Masala",origin:"South Asian",diets:["vegetarian","glutenfree"],goal:"maintain",emoji:"🧀",cal:420,p:24,c:32,f:22,ing:["250g paneer, cubed","1 can crushed tomatoes","1 onion","3 garlic cloves","1 tbsp ginger","1 tsp garam masala, cumin, turmeric","3 tbsp plain yogurt","2 tbsp oil","Fresh coriander","Basmati rice"],steps:["Marinate paneer in yogurt and spices 30 min. Grill or pan-fry until golden.","Sauté onion, garlic, ginger 5 min. Add spices.","Add tomatoes. Simmer 15 min. Add paneer.","Serve over basmati rice with coriander."]},
+  {name:"Caprese Egg Frittata",origin:"Italian",diets:["vegetarian","glutenfree"],goal:"lose",emoji:"🍅",cal:290,p:22,c:8,f:18,ing:["6 eggs","100g mozzarella, sliced","Cherry tomatoes, halved","Fresh basil","1 tbsp olive oil","Salt & pepper","Balsamic glaze"],steps:["Preheat oven to 180°C.","Whisk eggs, season. Pour into oiled oven-safe pan.","Arrange mozzarella, tomatoes on top. Add basil.","Bake 18–20 min until set. Drizzle with balsamic."]},
+  {name:"Lentil & Spinach Dal",origin:"South Asian",diets:["vegetarian","vegan","glutenfree","halal"],goal:"lose",emoji:"🍲",cal:310,p:18,c:46,f:5,ing:["200g red lentils","150g baby spinach","1 onion","3 garlic cloves","1 tbsp ginger","1 tsp turmeric, cumin, garam masala","1 can crushed tomatoes","Coconut milk","Fresh coriander"],steps:["Sauté onion, garlic, ginger 5 min. Add spices.","Add lentils, tomatoes, coconut milk, 200ml water.","Simmer 20–25 min until lentils are soft.","Stir in spinach until wilted. Top with coriander."]},
+  {name:"Greek Yogurt Parfait",origin:"Mediterranean",diets:["vegetarian","glutenfree"],goal:"lose",emoji:"🥣",cal:270,p:21,c:32,f:5,ing:["200g plain Greek yogurt","40g granola (GF)","Mixed berries","1 tbsp honey","1 tbsp chia seeds","Walnuts"],steps:["Layer Greek yogurt in a bowl or jar.","Add berries, then granola.","Drizzle honey, sprinkle chia seeds and walnuts.","Serve immediately or prep overnight."]},
+  {name:"Stuffed Bell Peppers",origin:"Mediterranean",diets:["vegetarian","glutenfree","halal"],goal:"maintain",emoji:"🫑",cal:360,p:16,c:44,f:12,ing:["4 large bell peppers","200g cooked brown rice","1 can black beans","1 cup corn","1 onion","2 garlic cloves","1 tsp cumin, paprika","100g shredded cheese","Salsa & sour cream"],steps:["Preheat oven to 190°C. Halve peppers, remove seeds.","Sauté onion and garlic. Mix with rice, beans, corn, spices.","Fill peppers with mixture. Top with cheese.","Bake 25–30 min until peppers are tender."]},
+
+  // VEGAN
+  {name:"Chickpea & Vegetable Curry",origin:"South Asian",diets:["vegan","glutenfree","halal"],goal:"maintain",emoji:"🍛",cal:380,p:16,c:54,f:10,ing:["2 cans chickpeas","1 can coconut milk","1 can crushed tomatoes","1 onion","3 garlic cloves","1 tbsp ginger","1 tsp cumin, turmeric, garam masala","Spinach","Basmati rice","Fresh coriander"],steps:["Sauté onion, garlic, ginger 5 min. Add spices and stir 1 min.","Add chickpeas, tomatoes, coconut milk. Simmer 20 min.","Stir in spinach until wilted.","Serve over basmati rice with coriander."]},
+  {name:"Tofu & Broccoli Stir-Fry",origin:"Asian",diets:["vegan","glutenfree"],goal:"bulk",emoji:"🥦",cal:360,p:26,c:24,f:16,ing:["300g firm tofu, pressed & cubed","250g broccoli","3 garlic cloves","1 tbsp ginger","3 tbsp soy sauce (GF)","1 tsp sesame oil","1 tsp chili flakes","Cooked rice","Sesame seeds"],steps:["Press tofu 30 min. Cube and pan-fry until golden all sides.","Stir-fry garlic, ginger, broccoli in wok 3–4 min.","Add tofu, soy sauce, sesame oil, chili. Toss.","Serve over rice with sesame seeds."]},
+  {name:"Overnight Oats",origin:"Classic",diets:["vegan","vegetarian"],goal:"maintain",emoji:"🫙",cal:370,p:14,c:58,f:9,ing:["80g rolled oats","250ml oat milk","1 tbsp chia seeds","1 tbsp peanut butter","1 tsp maple syrup","1 banana","Mixed berries","Cinnamon"],steps:["Combine oats, oat milk, chia seeds, cinnamon. Stir well.","Cover and refrigerate overnight (min 6 hours).","Top with sliced banana, berries, peanut butter.","Drizzle with maple syrup and serve."]},
+  {name:"Vegan Protein Smoothie Bowl",origin:"Classic",diets:["vegan","glutenfree"],goal:"bulk",emoji:"🫐",cal:420,p:22,c:56,f:12,ing:["2 frozen bananas","1 scoop vegan protein powder","200ml oat milk","1 tbsp almond butter","Toppings: granola, berries, coconut flakes, chia seeds","Hemp seeds"],steps:["Blend frozen bananas, protein powder, oat milk, almond butter until thick.","Pour into a bowl — it should be thicker than a smoothie.","Arrange toppings: granola, berries, coconut flakes.","Sprinkle hemp seeds and chia seeds on top."]},
+  {name:"Black Bean Tacos",origin:"Mexican",diets:["vegan","glutenfree"],goal:"lose",emoji:"🌮",cal:320,p:14,c:48,f:8,ing:["2 cans black beans","Corn tortillas (GF)","1 avocado","Cherry tomatoes","Red onion","Fresh coriander","Lime juice","1 tsp cumin, smoked paprika","Jalapeño (optional)"],steps:["Drain and rinse beans. Season with cumin, paprika, salt. Warm in pan 5 min.","Dice tomatoes, onion. Mix with coriander and lime juice.","Warm tortillas. Mash or slice avocado.","Assemble tacos: beans, avocado, salsa, jalapeño."]},
+  {name:"Quinoa Power Bowl",origin:"Classic",diets:["vegan","glutenfree","halal"],goal:"bulk",emoji:"🥗",cal:460,p:20,c:58,f:14,ing:["150g dry quinoa","1 can chickpeas, roasted","1 avocado","Roasted sweet potato","Baby spinach","Cherry tomatoes","Tahini dressing","Lemon juice","Pumpkin seeds"],steps:["Cook quinoa in 300ml water 15 min.","Roast chickpeas and diced sweet potato at 200°C with oil and spices 25 min.","Make tahini dressing: tahini, lemon, water, garlic, salt.","Assemble bowl: quinoa, spinach, veg, chickpeas. Drizzle dressing."]},
+];
+
+let currentDiet='halal', currentGoal='all';
+function setDiet(d,btn){
+  currentDiet=d;
+  document.querySelectorAll('.dtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMeals();
+}
+function setGoalFilter(g,btn){
+  currentGoal=g;
+  document.querySelectorAll('.gtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMeals();
+}
+function renderMeals(){
+  let list=MEALS.filter(m=>m.diets.includes(currentDiet));
+  if(currentGoal!=='all') list=list.filter(m=>m.goal===currentGoal);
+  const goalLabel={lose:'Weight Loss',bulk:'Bulking',maintain:'Maintenance'};
+  const goalBadge={lose:'bl',bulk:'bg',maintain:'bm'};
+  if(list.length===0){
+    document.getElementById('meals-grid').innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:1rem">No meals found for this combination. Try a different goal filter.</div>';
+    return;
+  }
+  document.getElementById('meals-grid').innerHTML=list.map((m,i)=>{
+    const uid='m'+currentDiet+i;
+    const dietTagMap={halal:'dtag-halal',nonhalal:'dtag-nonhalal',glutenfree:'dtag-gf',vegetarian:'dtag-veg',vegan:'dtag-vegan'};
+    const dietLabelMap={halal:'Halal',nonhalal:'Non-Halal',glutenfree:'Gluten-Free',vegetarian:'Vegetarian',vegan:'Vegan'};
+    const tags=m.diets.map(d=>`<span class="dtag ${dietTagMap[d]}">${dietLabelMap[d]}</span>`).join('');
+    return `<div class="meal-card" id="${uid}">
+      <div class="meal-hdr" onclick="toggleMeal('${uid}')">
+        <span class="meal-emoji">${m.emoji}</span>
+        <div class="meal-info">
+          <div class="meal-name">${m.name}</div>
+          <div class="meal-meta"><span class="meal-origin">${m.origin}</span><span class="mbadge ${goalBadge[m.goal]}">${goalLabel[m.goal]}</span></div>
+        </div>
+        <span class="meal-cals">${m.cal} kcal</span>
+        <span class="meal-arr">▼</span>
+      </div>
+      <div class="meal-body">
+        <div class="diet-tags">${tags}</div>
+        <div class="rec-macs"><div class="rmac">Protein: <span>${m.p}g</span></div><div class="rmac">Carbs: <span>${m.c}g</span></div><div class="rmac">Fats: <span>${m.f}g</span></div><div class="rmac">Calories: <span>${m.cal} kcal</span></div></div>
+        <div class="rsec"><h4>Ingredients</h4><ul class="ing-list">${m.ing.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div class="rsec" style="margin-top:.7rem"><h4>Method</h4><ol class="steps-list">${m.steps.map(s=>`<li>${s}</li>`).join('')}</ol></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleMeal(uid){document.getElementById(uid).classList.toggle('open')}
+renderMeals();
+
+// ── AI Food Tracker ─────────────────────────────────────────────
+let foodTimer=null,foodResults=[];
+function handleFoodInput(){
+  const q=document.getElementById('food-search').value.trim();
+  clearTimeout(foodTimer);
+  const st=document.getElementById('ai-status');
+  if(q.length<2){document.getElementById('food-results').innerHTML='';st.textContent='';document.getElementById('log-result').classList.remove('show');return}
+  st.className='ai-status loading';st.textContent='AI is looking that up...';
+  foodTimer=setTimeout(()=>fetchFoodAI(q),700);
+}
+async function fetchFoodAI(q){
+  const st=document.getElementById('ai-status');
+  try{
+    const res=await fetch('/api/food',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});
+    if(!res.ok){const e=await res.json();throw new Error(e.error||'Server error '+res.status)}
+    foodResults=await res.json();
+    st.className='ai-status';st.textContent=foodResults.length+' results for "'+q+'"';
+    renderFoodResults();
+  }catch(e){
+    st.className='ai-status err';st.textContent='Error: '+e.message;
+    document.getElementById('food-results').innerHTML='';
+  }
+}
+function renderFoodResults(){
+  document.getElementById('food-results').innerHTML=foodResults.map((f,i)=>
+    `<div class="food-item" onclick="selectFood(${i})"><div class="food-name">${f.name}</div><div class="food-cal">${f.serving} · ${f.calories} kcal</div></div>`
+  ).join('');
+  document.getElementById('log-result').classList.remove('show');
+}
+function selectFood(i){
+  const f=foodResults[i];
+  document.querySelectorAll('.food-item').forEach(el=>el.classList.remove('sel'));
+  document.querySelectorAll('.food-item')[i].classList.add('sel');
+  document.getElementById('log-name').textContent=f.name;
+  document.getElementById('log-serving').textContent='Per '+f.serving;
+  document.getElementById('log-cal').textContent=f.calories+' kcal';
+  document.getElementById('log-prot').textContent=f.protein_g+'g';
+  document.getElementById('log-carb').textContent=f.carbs_g+'g';
+  document.getElementById('log-fat').textContent=f.fat_g+'g';
+  document.getElementById('log-notes').textContent=f.note;
+  document.getElementById('log-result').classList.add('show');
+}
+
+// ── Workouts ────────────────────────────────────────────────────
+const WORKOUTS={
+  male:[
+    {name:"Chest",icon:"💪",sub:"Upper · Middle · Lower",groups:[
+      {label:"Upper Chest",exs:[{name:"Incline Barbell Press",detail:"4×6–8 reps",tag:"Compound"},{name:"Incline Dumbbell Press",detail:"3×8–12 reps",tag:"Compound"},{name:"High-to-Low Cable Fly",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Middle Chest",exs:[{name:"Flat Barbell Bench Press",detail:"4×6–8 reps",tag:"Compound"},{name:"Flat Dumbbell Press",detail:"3×8–12 reps",tag:"Compound"},{name:"Cable Crossover",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Lower Chest",exs:[{name:"Decline Barbell Press",detail:"3×8–10 reps",tag:"Compound"},{name:"Decline Dumbbell Press",detail:"3×10–12 reps",tag:"Compound"},{name:"Chest Dips",detail:"3×10–15 reps",tag:"Bodyweight"}]},
+    ]},
+    {name:"Back",icon:"🏋️",sub:"Upper · Lats · Lower",groups:[
+      {label:"Upper Back & Traps",exs:[{name:"Barbell Row",detail:"4×6–8 reps",tag:"Compound"},{name:"Seated Cable Row",detail:"3×10–12 reps",tag:"Compound"},{name:"Face Pulls",detail:"3×15–20 reps",tag:"Isolation"}]},
+      {label:"Lats (Width)",exs:[{name:"Pull-Ups / Chin-Ups",detail:"4×max reps",tag:"Compound"},{name:"Lat Pulldown",detail:"4×8–12 reps",tag:"Compound"},{name:"Straight-Arm Pulldown",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Lower Back",exs:[{name:"Conventional Deadlift",detail:"4×4–6 reps",tag:"Compound"},{name:"Romanian Deadlift",detail:"3×8–10 reps",tag:"Compound"},{name:"Hyperextensions",detail:"3×15 reps",tag:"Isolation"}]},
+    ]},
+    {name:"Shoulders",icon:"🦾",sub:"Front · Side · Rear",groups:[
+      {label:"Front Deltoid",exs:[{name:"Overhead Barbell Press",detail:"4×6–8 reps",tag:"Compound"},{name:"Arnold Press",detail:"3×10–12 reps",tag:"Compound"},{name:"Front Dumbbell Raise",detail:"3×12 reps",tag:"Isolation"}]},
+      {label:"Side Deltoid",exs:[{name:"Lateral Raises",detail:"4×12–15 reps",tag:"Isolation"},{name:"Cable Lateral Raise",detail:"3×15 reps",tag:"Isolation"},{name:"Upright Row (wide grip)",detail:"3×10–12 reps",tag:"Compound"}]},
+      {label:"Rear Deltoid",exs:[{name:"Reverse Fly (Pec Deck)",detail:"3×15 reps",tag:"Isolation"},{name:"Bent-Over Lateral Raise",detail:"3×12–15 reps",tag:"Isolation"},{name:"Band Pull-Apart",detail:"3×20 reps",tag:"Isolation"}]},
+    ]},
+    {name:"Legs",icon:"🦵",sub:"Quads · Hamstrings · Calves",groups:[
+      {label:"Quads",exs:[{name:"Barbell Back Squat",detail:"4×6–8 reps",tag:"Compound"},{name:"Leg Press",detail:"4×10–12 reps",tag:"Compound"},{name:"Leg Extension",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Hamstrings",exs:[{name:"Romanian Deadlift",detail:"4×8–10 reps",tag:"Compound"},{name:"Lying Leg Curl",detail:"3×12–15 reps",tag:"Isolation"},{name:"Nordic Hamstring Curl",detail:"3×6–8 reps",tag:"Bodyweight"}]},
+      {label:"Calves",exs:[{name:"Standing Calf Raise",detail:"4×15–20 reps",tag:"Isolation"},{name:"Seated Calf Raise",detail:"3×15–20 reps",tag:"Isolation"},{name:"Single-Leg Calf Raise",detail:"3×15 reps each",tag:"Bodyweight"}]},
+    ]},
+    {name:"Biceps",icon:"💪",sub:"Long Head · Short Head · Brachialis",groups:[
+      {label:"Long Head (Outer Peak)",exs:[{name:"Incline Dumbbell Curl",detail:"3×10–12 reps",tag:"Isolation"},{name:"Hammer Curl",detail:"3×10–12 reps",tag:"Isolation"},{name:"Barbell Curl (close grip)",detail:"4×8–10 reps",tag:"Isolation"}]},
+      {label:"Short Head (Inner Fullness)",exs:[{name:"Preacher Curl",detail:"3×10–12 reps",tag:"Isolation"},{name:"Concentration Curl",detail:"3×12 reps each",tag:"Isolation"},{name:"Barbell Curl (wide grip)",detail:"3×10 reps",tag:"Isolation"}]},
+      {label:"Brachialis (Thickness)",exs:[{name:"Reverse Barbell Curl",detail:"3×12 reps",tag:"Isolation"},{name:"Cable Hammer Curl",detail:"3×12–15 reps",tag:"Isolation"},{name:"Zottman Curl",detail:"3×10 reps",tag:"Isolation"}]},
+    ]},
+    {name:"Triceps",icon:"🏆",sub:"Long Head · Lateral · Medial",groups:[
+      {label:"Long Head (Mass)",exs:[{name:"Close-Grip Bench Press",detail:"4×8–10 reps",tag:"Compound"},{name:"Overhead Tricep Extension",detail:"3×12 reps",tag:"Isolation"},{name:"Skull Crushers",detail:"3×10–12 reps",tag:"Isolation"}]},
+      {label:"Lateral Head (Width)",exs:[{name:"Rope Pushdown",detail:"4×12–15 reps",tag:"Isolation"},{name:"Single-Arm Pushdown",detail:"3×12 reps each",tag:"Isolation"},{name:"Diamond Push-Up",detail:"3×max reps",tag:"Bodyweight"}]},
+      {label:"Medial Head (Definition)",exs:[{name:"Reverse-Grip Pushdown",detail:"3×15 reps",tag:"Isolation"},{name:"Bench Dips",detail:"3×12–15 reps",tag:"Bodyweight"},{name:"Kickbacks",detail:"3×12–15 reps each",tag:"Isolation"}]},
+    ]},
+    {name:"Core",icon:"🔥",sub:"Upper · Lower · Obliques",groups:[
+      {label:"Upper Abs",exs:[{name:"Cable Crunch",detail:"3×15–20 reps",tag:"Isolation"},{name:"Crunches",detail:"3×20–25 reps",tag:"Bodyweight"},{name:"Ab Wheel Rollout",detail:"3×10–12 reps",tag:"Compound"}]},
+      {label:"Lower Abs",exs:[{name:"Hanging Leg Raise",detail:"3×12–15 reps",tag:"Compound"},{name:"Reverse Crunch",detail:"3×15 reps",tag:"Bodyweight"},{name:"Dragon Flag",detail:"3×6–8 reps",tag:"Bodyweight"}]},
+      {label:"Obliques & Stability",exs:[{name:"Russian Twists",detail:"3×20 total reps",tag:"Rotation"},{name:"Plank",detail:"3×45–60 sec",tag:"Stability"},{name:"Side Plank",detail:"3×30–45 sec each",tag:"Stability"}]},
+    ]},
+    {name:"Glutes",icon:"🍑",sub:"Glute Max · Glute Med · Activation",groups:[
+      {label:"Glute Max (Size)",exs:[{name:"Barbell Hip Thrust",detail:"4×10–12 reps",tag:"Isolation"},{name:"Sumo Deadlift",detail:"3×8–10 reps",tag:"Compound"},{name:"Glute Bridge",detail:"3×15 reps",tag:"Bodyweight"}]},
+      {label:"Glute Med (Width)",exs:[{name:"Cable Hip Abduction",detail:"3×15–20 reps each",tag:"Isolation"},{name:"Lateral Band Walk",detail:"3×20 steps each",tag:"Isolation"},{name:"Side-Lying Clam",detail:"3×20 reps each",tag:"Bodyweight"}]},
+      {label:"Glute Min & Activation",exs:[{name:"Bulgarian Split Squat",detail:"3×10 reps each",tag:"Compound"},{name:"Step-Up with Dumbbells",detail:"3×12 reps each",tag:"Compound"},{name:"Cable Kickback",detail:"3×15 reps each",tag:"Isolation"}]},
+    ]},
+  ],
+  female:[
+    {name:"Chest",icon:"💗",sub:"Upper · Middle · Lower",groups:[
+      {label:"Upper Chest",exs:[{name:"Incline Dumbbell Press",detail:"3×10–12 reps",tag:"Compound"},{name:"Incline Barbell Press",detail:"3×8–12 reps",tag:"Compound"},{name:"Incline Cable Fly",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Middle Chest",exs:[{name:"Flat Dumbbell Press",detail:"3×10–12 reps",tag:"Compound"},{name:"Cable Crossover (mid)",detail:"3×12–15 reps",tag:"Isolation"},{name:"Push-Up",detail:"3×max reps",tag:"Bodyweight"}]},
+      {label:"Lower Chest",exs:[{name:"Decline Dumbbell Press",detail:"3×10–12 reps",tag:"Compound"},{name:"Low-to-High Cable Fly",detail:"3×12–15 reps",tag:"Isolation"},{name:"Decline Push-Up",detail:"3×12 reps",tag:"Bodyweight"}]},
+    ]},
+    {name:"Back",icon:"🏋️",sub:"Upper · Lats · Lower",groups:[
+      {label:"Upper Back (Posture & Tone)",exs:[{name:"Seated Cable Row",detail:"3×12–15 reps",tag:"Compound"},{name:"Dumbbell Row",detail:"3×12 reps each",tag:"Compound"},{name:"Face Pulls",detail:"3×15–20 reps",tag:"Isolation"}]},
+      {label:"Lats (Width & V-Taper)",exs:[{name:"Lat Pulldown",detail:"4×10–12 reps",tag:"Compound"},{name:"Assisted Pull-Up",detail:"3×8–10 reps",tag:"Compound"},{name:"Single-Arm Cable Pulldown",detail:"3×12 reps each",tag:"Isolation"}]},
+      {label:"Lower Back & Stability",exs:[{name:"Hyperextensions",detail:"3×15 reps",tag:"Isolation"},{name:"Romanian Deadlift",detail:"3×10–12 reps",tag:"Compound"},{name:"Bird Dog",detail:"3×12 reps each",tag:"Stability"}]},
+    ]},
+    {name:"Shoulders",icon:"🦾",sub:"Front · Side · Rear",groups:[
+      {label:"Front Deltoid",exs:[{name:"Dumbbell Shoulder Press",detail:"4×10–12 reps",tag:"Compound"},{name:"Arnold Press",detail:"3×12 reps",tag:"Compound"},{name:"Front Raise",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Side Deltoid (Width)",exs:[{name:"Lateral Raises",detail:"4×12–15 reps",tag:"Isolation"},{name:"Cable Lateral Raise",detail:"3×15 reps",tag:"Isolation"},{name:"Upright Row",detail:"3×12 reps",tag:"Compound"}]},
+      {label:"Rear Deltoid (Posture)",exs:[{name:"Reverse Fly (Pec Deck)",detail:"3×15 reps",tag:"Isolation"},{name:"Band Pull-Apart",detail:"3×20 reps",tag:"Isolation"},{name:"Bent-Over Lateral Raise",detail:"3×15 reps",tag:"Isolation"}]},
+    ]},
+    {name:"Biceps",icon:"💪",sub:"Long Head · Short Head · Brachialis",groups:[
+      {label:"Long Head (Outer Peak)",exs:[{name:"Incline Dumbbell Curl",detail:"3×10–12 reps",tag:"Isolation"},{name:"Hammer Curl",detail:"3×12 reps",tag:"Isolation"},{name:"Barbell Curl (close grip)",detail:"3×10–12 reps",tag:"Isolation"}]},
+      {label:"Short Head (Inner Fullness)",exs:[{name:"Preacher Curl",detail:"3×12 reps",tag:"Isolation"},{name:"Concentration Curl",detail:"3×12 reps each",tag:"Isolation"},{name:"Cable Curl (wide grip)",detail:"3×12–15 reps",tag:"Isolation"}]},
+      {label:"Brachialis (Thickness)",exs:[{name:"Reverse Dumbbell Curl",detail:"3×12 reps",tag:"Isolation"},{name:"Cable Hammer Curl",detail:"3×12–15 reps",tag:"Isolation"},{name:"Zottman Curl",detail:"3×10 reps",tag:"Isolation"}]},
+    ]},
+    {name:"Triceps",icon:"🏆",sub:"Long Head · Lateral · Medial",groups:[
+      {label:"Long Head (Mass & Tone)",exs:[{name:"Overhead Tricep Extension (DB)",detail:"3×12 reps",tag:"Isolation"},{name:"Skull Crushers (light)",detail:"3×12 reps",tag:"Isolation"},{name:"Close-Grip Push-Up",detail:"3×max reps",tag:"Bodyweight"}]},
+      {label:"Lateral Head (Definition)",exs:[{name:"Rope Pushdown",detail:"3×15 reps",tag:"Isolation"},{name:"Single-Arm Pushdown",detail:"3×12 reps each",tag:"Isolation"},{name:"Diamond Push-Up",detail:"3×max reps",tag:"Bodyweight"}]},
+      {label:"Medial Head (Tightening)",exs:[{name:"Reverse-Grip Pushdown",detail:"3×15 reps",tag:"Isolation"},{name:"Bench Dips",detail:"3×12–15 reps",tag:"Bodyweight"},{name:"Kickbacks",detail:"3×15 reps each",tag:"Isolation"}]},
+    ]},
+    {name:"Core & Abs",icon:"🔥",sub:"Upper · Lower · Waist",groups:[
+      {label:"Upper Abs",exs:[{name:"Crunches",detail:"3×20–25 reps",tag:"Bodyweight"},{name:"Cable Crunch",detail:"3×15–20 reps",tag:"Isolation"},{name:"Decline Sit-Up",detail:"3×15 reps",tag:"Bodyweight"}]},
+      {label:"Lower Abs (Flatten & Tone)",exs:[{name:"Reverse Crunch",detail:"3×15–20 reps",tag:"Bodyweight"},{name:"Hanging Knee Raise",detail:"3×12–15 reps",tag:"Compound"},{name:"Flutter Kicks",detail:"3×30 sec",tag:"Bodyweight"}]},
+      {label:"Waist & Obliques",exs:[{name:"Russian Twists",detail:"3×20 total reps",tag:"Rotation"},{name:"Side Plank",detail:"3×30–45 sec each",tag:"Stability"},{name:"Bicycle Crunches",detail:"3×20 total reps",tag:"Bodyweight"}]},
+    ]},
+    {name:"Glutes",icon:"🍑",sub:"Glute Max · Glute Med · Lower Glute",groups:[
+      {label:"Glute Max (Size & Lift)",exs:[{name:"Barbell Hip Thrust",detail:"4×10–15 reps",tag:"Isolation"},{name:"Romanian Deadlift",detail:"3×10–12 reps",tag:"Compound"},{name:"Glute Bridge (with band)",detail:"4×15–20 reps",tag:"Bodyweight"}]},
+      {label:"Glute Med (Shape & Width)",exs:[{name:"Cable Hip Abduction",detail:"3×15–20 reps each",tag:"Isolation"},{name:"Lateral Band Walk",detail:"3×25 steps each",tag:"Isolation"},{name:"Sumo Squat (wide stance)",detail:"4×12–15 reps",tag:"Compound"}]},
+      {label:"Lower Glute (Underbutt)",exs:[{name:"Donkey Kickback",detail:"3×20 reps each",tag:"Isolation"},{name:"Step-Up with Dumbbells",detail:"3×12 reps each",tag:"Compound"},{name:"Bulgarian Split Squat",detail:"3×10–12 reps each",tag:"Compound"}]},
+    ]},
+    {name:"Legs",icon:"🦵",sub:"Quads · Hamstrings · Calves",groups:[
+      {label:"Quads (Tone & Shape)",exs:[{name:"Goblet Squat",detail:"4×12–15 reps",tag:"Compound"},{name:"Leg Press",detail:"3×12–15 reps",tag:"Compound"},{name:"Walking Lunges",detail:"3×12 reps each",tag:"Compound"}]},
+      {label:"Hamstrings (Tighten & Lift)",exs:[{name:"Romanian Deadlift (DB)",detail:"4×10–12 reps",tag:"Compound"},{name:"Lying Leg Curl",detail:"3×12–15 reps",tag:"Isolation"},{name:"Swiss Ball Hamstring Curl",detail:"3×12 reps",tag:"Isolation"}]},
+      {label:"Calves",exs:[{name:"Standing Calf Raise",detail:"4×15–20 reps",tag:"Isolation"},{name:"Seated Calf Raise",detail:"3×15–20 reps",tag:"Isolation"},{name:"Jump Rope",detail:"3×2 min",tag:"Cardio"}]},
+    ]},
+  ]
+};
+
+function renderWorkouts(){
+  const gender=document.getElementById('gender-select').value;
+  const list=WORKOUTS[gender];
+  document.getElementById('workout-content').innerHTML=list.map((mg,mi)=>`
+    <div class="muscle-item" id="mi${mi}">
+      <div class="muscle-hdr" onclick="toggleMuscle(${mi})">
+        <span class="muscle-icon">${mg.icon}</span>
+        <div class="muscle-hdr-info">
+          <div class="muscle-hdr-name">${mg.name}</div>
+          <div class="muscle-hdr-sub">${mg.sub}</div>
+        </div>
+        <span class="muscle-arr">▼</span>
+      </div>
+      <div class="muscle-body">
+        ${mg.groups.map(sg=>`
+          <div class="sub-grp">
+            <div class="sg-label">${sg.label}</div>
+            <div class="ex-cards">${sg.exs.map(e=>`<div class="ex-card"><div class="ex-name">${e.name}</div><div class="ex-detail">${e.detail}</div><span class="ex-tag">${e.tag}</span></div>`).join('')}</div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+function toggleMuscle(i){document.getElementById('mi'+i).classList.toggle('open')}
+renderWorkouts();
+
+// ── BMI ─────────────────────────────────────────────────────────
+function calcBMI(){
+  const w=+document.getElementById('bmi-w').value;
+  const h=+document.getElementById('bmi-h').value;
+  if(!w||!h){alert('Enter weight and height.');return}
+  const bmi=+(w/((h/100)**2)).toFixed(1);
+  let cat,col,pct,note;
+  if(bmi<18.5){cat='Underweight';col='#5B8DEF';pct=bmi/40*8;note='Your BMI suggests you may be underweight. Focus on calorie-dense whole foods and resistance training.';}
+  else if(bmi<25){cat='Normal Weight ✓';col='#C8F53A';pct=8+(bmi-18.5)/6.5*30;note='Your BMI falls within the healthy range. Maintain this through a balanced diet and regular exercise.';}
+  else if(bmi<30){cat='Overweight';col='#F5A623';pct=38+(bmi-25)/5*27;note='A moderate calorie deficit and regular exercise can help. Try the Calorie Calculator for a personalised target.';}
+  else{cat='Obese';col='#F0605A';pct=Math.min(65+(bmi-30)/10*35,96);note='We strongly recommend consulting a healthcare professional for personalised guidance.';}
+  document.getElementById('bmi-val').textContent=bmi;
+  document.getElementById('bmi-val').style.color=col;
+  document.getElementById('bmi-cat').textContent=cat;
+  document.getElementById('bmi-marker').style.left=Math.min(pct,96)+'%';
+  document.getElementById('bmi-note').textContent=note;
+  document.getElementById('bmi-result').classList.add('show');
+}
+
+// ── Tips ────────────────────────────────────────────────────────
+const TIPS=[
+  {icon:'🥩',title:'Prioritise Protein',body:'Aim for 1.6–2.2g of protein per kg of bodyweight daily. Protein keeps you full, preserves muscle during a cut, and drives growth during a bulk.'},
+  {icon:'💧',title:'Stay Hydrated',body:'Drink 35ml of water per kg of bodyweight daily. Dehydration impairs performance, digestion, and fat metabolism.'},
+  {icon:'🥦',title:'Eat Whole Foods First',body:'Build 80% of your diet around whole, minimally processed foods — lean meats, eggs, legumes, vegetables, fruits, oats, and rice.'},
+  {icon:'⏰',title:'Meal Timing Matters',body:'Eat protein within 2 hours of training. A carb-rich meal 1–2 hours before training fuels performance and endurance.'},
+  {icon:'😴',title:'Sleep is a Macronutrient',body:'Poor sleep increases cortisol, drives hunger hormones, and impairs fat loss. Aim for 7–9 hours every night.'},
+  {icon:'📉',title:'Track to Learn',body:'Tracking food for 2–4 weeks teaches you where hidden calories come from. Then transition to intuitive eating.'},
+  {icon:'🌍',title:'Carbs Are Not the Enemy',body:'Carbohydrates are your body\'s primary fuel. Choose complex carbs — oats, sweet potato, brown rice, legumes.'},
+  {icon:'🫒',title:'Include Healthy Fats',body:'Omega-3s and monounsaturated fats support hormone production, brain health, and inflammation control. Aim for 20–35% of calories from fat.'},
+  {icon:'🏋️',title:'Progressive Overload Wins',body:'Gradually increase weight, reps, or volume over time. This is the single most important principle for getting stronger.'},
+  {icon:'🍽️',title:'Don\'t Skip Meals',body:'Skipping meals leads to overeating later. Consistent meal structure keeps blood sugar stable and reduces cravings.'},
+  {icon:'🌿',title:'Fibre for Gut Health',body:'Aim for 25–35g of fibre daily from vegetables, legumes, and whole grains. It keeps you full and supports digestion.'},
+  {icon:'🚶',title:'NEAT Counts',body:'Non-exercise movement — walking, standing, fidgeting — can burn 200–500 extra calories daily. Take stairs, walk after meals.'},
+];
+document.getElementById('tips-grid').innerHTML=TIPS.map(t=>`<div class="tip-card"><div class="tip-icon">${t.icon}</div><div class="tip-title">${t.title}</div><div class="tip-body">${t.body}</div></div>`).join('');
+</script>
+</body>
+</html>
